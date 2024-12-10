@@ -52,10 +52,6 @@ local function Visibility(state, lib)
     end
 end
 
-local function ToColor3(col)
-    return Color3.new(col.r, col.g, col.b)
-end
-
 local black = Color3.fromRGB(0, 0, 0)
 
 local function ESP(plr)
@@ -87,18 +83,12 @@ local function ESP(plr)
                 if humanoid.Health > 0 then
                     local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
                     if OnScreen then
-                        local head = plr.Character:FindFirstChild("Head")
-                        local upperTorso = plr.Character:FindFirstChild("UpperTorso")
-                        local torsoPos = camera:WorldToViewportPoint(upperTorso and upperTorso.Position or plr.Character.HumanoidRootPart.Position)
-                        local headPos = camera:WorldToViewportPoint(head and head.Position or plr.Character.HumanoidRootPart.Position)
-
-                        local DistanceY = math.clamp((Vector2.new(headPos.X, headPos.Y) - Vector2.new(torsoPos.X, torsoPos.Y)).magnitude, 2, math.huge)
-
+                        local DistanceY = 50 -- Adjusted size of the box
                         local function Size(item)
-                            item.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2)
-                            item.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2)
-                            item.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)
-                            item.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2)
+                            item.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY)
+                            item.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY)
+                            item.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY)
+                            item.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY)
                         end
                         Size(library.box)
                         Size(library.black)
@@ -115,24 +105,9 @@ local function ESP(plr)
                                 library.tracer.From = Vector2.new(mouse.X, mouse.Y + 36)
                                 library.blacktracer.From = Vector2.new(mouse.X, mouse.Y + 36)
                             end
-                            library.tracer.To = Vector2.new(HumPos.X, HumPos.Y + DistanceY * 2)
-                            library.blacktracer.To = Vector2.new(HumPos.X, HumPos.Y + DistanceY * 2)
-                        else
-                            Visibility(false, library)
+                            library.tracer.To = Vector2.new(HumPos.X, HumPos.Y + DistanceY)
+                            library.blacktracer.To = Vector2.new(HumPos.X, HumPos.Y + DistanceY)
                         end
-
-                        local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)).magnitude
-                        local healthoffset = humanoid.Health / humanoid.MaxHealth * d
-
-                        library.greenhealth.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2)
-                        library.greenhealth.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2 - healthoffset)
-
-                        library.healthbar.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2)
-                        library.healthbar.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y - DistanceY * 2)
-
-                        local green = Color3.fromRGB(0, 255, 0)
-                        local red = Color3.fromRGB(255, 0, 0)
-                        library.greenhealth.Color = red:lerp(green, humanoid.Health / humanoid.MaxHealth)
 
                         if Team_Check.TeamCheck then
                             if plr.TeamColor == player.TeamColor then
@@ -175,5 +150,16 @@ end
 game:GetService("Players").PlayerAdded:Connect(function(newplr)
     if newplr.Name ~= player.Name then
         ESP(newplr)
+    end
+end)
+
+-- Periodic ESP Reset
+task.spawn(function()
+    while task.wait(10) do
+        for plr in pairs(activePlayers) do
+            if not game:GetService("Players"):FindFirstChild(plr.Name) then
+                activePlayers[plr] = nil
+            end
+        end
     end
 end)
